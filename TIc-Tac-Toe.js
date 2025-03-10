@@ -38,7 +38,23 @@ io.on("connection", (socket) => {
 
         if (board[data.index] === ""){
             board[data.index] = currentPlayer;
-            io.emit("gameOver", `${currentPlayer} wins!`);
+            io.emit("UpdateBoard", { board, player: currentPlayer });
+
+            if (checkWin(currentPlayer)) {
+                io.emit("gameOver", `${currentPlayer} wins!`)
+                resetGame();
+                return;
+            }
+
+            if(board.every(cell => cell !== "")) {
+                io.emit("gameOver", "Draw");
+                resetGame();
+                return;
+            }
+
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
         }
-    })
+    });
+
+    
 })
