@@ -1,5 +1,6 @@
 const express = require("express");
 const http = require("http");
+const { disconnect } = require("process");
 const socketIO = require("socket.io");
 
 const app = express();
@@ -56,5 +57,7 @@ io.on("connection", (socket) => {
         }
     });
 
-    
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+    })
 })
