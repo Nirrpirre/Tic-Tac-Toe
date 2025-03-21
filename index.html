@@ -7,8 +7,27 @@
 </head>
 <body>
     <h1>Multiplayer Tic-Tac-Toe</h1>
-    <div id="status">Waiting for players...</div>
-    
+    <div id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+    <div id="status"></div>
+
+    <script>
+        const Socket = io();
+        const board = document.getElementById('board');
+        const cells = document.querySelectorAll('.cell');
+        const status = document.getElementById('status');
+        let mySymbol;
+        let currentPlayer ='X';
+    </script>
 
 <script src="/Tic Tac Toe/TIc-Tac-Toe.js"></script>
 <script src="/Tic Tac Toe/style.css"></script>
