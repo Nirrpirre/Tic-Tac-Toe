@@ -2,7 +2,6 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
-const { Socket } = require('dgram');
 
 const app = express();
 const server = http.createServer(app);
@@ -11,13 +10,14 @@ const io = new Server(server);
 
 let players = [];
 let boardState = ['', '', '', '', '', '', '', '', ''];
-let currentPlayer = X;
+let currentPlayer = 'X';
 
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
-  });
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 
   const checkWinner = () => {
     const winningCombinations = [
@@ -51,8 +51,11 @@ io.on('connection', (Socket) => {
       Socket.emit('spectator');
     }
 
-    io.emit('updatePlayers', players.map(player => player.symbol));
-
+    io.emit('updatePlayers', {
+      players: players.map(player => player.symbol),
+      currentPlayer: currentPlayer
+  });
+  
     Socket.on('makeMove', (data) => {
       if (Socket.id === players.find(player => player.symbol === currentPlayer).id && boardState[data.index] === '') {
         boardState[data.index] = data.player;
