@@ -46,8 +46,8 @@ io.on('connection', (Socket) => {
 
     if(players.length < 2) {
         players.push({ id: Socket.id, symbol: players.length === 0 ? 'X' : 'O'});
-        Socket.emit('assignsymbol', players[players.length -1].symbol);
-    } else {
+        Socket.emit('assignSymbol', players[players.length - 1].symbol);
+      } else {
       Socket.emit('spectator');
     }
 
@@ -71,7 +71,7 @@ io.on('connection', (Socket) => {
       }
     });
 
-    Socket.on('disconect', () => {
+    Socket.on('disconnect', () => {
       console.log('User disconnected:', Socket.id);
       players = players.filter(player => player.id !== Socket.id);
       io.emit('updatePlayers', players.map(player => player.symbol));

@@ -18,62 +18,10 @@
         <div class="cell" data-index="7"></div>
         <div class="cell" data-index="8"></div>
     </div>
-    <div id="status"></div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const Socket = io();
-        const board = document.getElementById('board');
-        const cells = document.querySelectorAll('.cell');
-        const status = document.getElementById('status');
-        let mySymbol;
-
-        Socket.on('assignSymbol', (symbol) => {
-            mySymbol = symbol;
-            status.textContent = `You are Player ${symbol}`;
-        });
-
-        Socket.on('spectator', () => {
-            status.textContent = 'You are a spectator.';
-        });
-
-        Socket.on('updatePlayers', (data) => {
-    status.textContent = `Players: ${data.players.join(' vs ')}. Current player: ${data.currentPlayer}`;
-    currentPlayer = data.currentPlayer; // This ensures `currentPlayer` is defined
-});
-
-
-        cells.forEach(cell => {
-            cell.addEventListener('click', () => {
-                if(cell.textContent === '' && mySymbol === currentPlayer) {
-                    Socket.emit('makeMove', {
-                        index: cell.getAttribute('data-index'),
-                        player: mySymbol
-                    });
-                }
-            });
-        });
-
-        Socket.on('moveMade', (data) => {
-            cells[data.index].textContent = data.player;
-            currentPlayer=data.player === 'X' ? 'O' : 'X';
-            status.textContent = `Current player: ${currentPlayer}`;
-        });
-
-        Socket.on('gameOver', (data) => {
-            if (data.winner === 'Draw') {
-                alert('The game is a draw!');
-            } else {
-                alert(`Player ${data.winner} wins!`);
-            }
-
-            cells.forEach(cell => cell.textContent = '');
-            currentPlayer = 'X';
-        })
-    </script>
+    <div id='status'></div>
 
 <link rel="stylesheet" href="style.css">
 <script src="/socket.io/socket.io.js"></script>
-<script src="style.css"></script>
+<script src="Tickgame.js"></script>
 </body>
 </html>
