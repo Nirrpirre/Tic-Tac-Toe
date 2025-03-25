@@ -14,8 +14,8 @@ Socket.on('spectator', () => {
 });
 
 Socket.on('updatePlayers', (data) => {
-s.textContent = `Players: ${data.players.join(' vs ')}. Current player: ${data.currentPlayer}`;
-currentPlayer = data.currentPlayer;
+    s.textContent = `Players: ${data.players.join(' vs ')}. Current player: ${data.currentPlayer}`;
+    currentPlayer = data.currentPlayer;
 });
 
 
@@ -41,14 +41,17 @@ Socket.on('moveMade', (data) => {
 
 Socket.on('gameOver', (data) => {
     setTimeout(() => {
-        if (data.winner === 'Draw') {
-            alert('The game is a draw!');
-        } else {
-            alert(`Player ${data.winner} wins!`);
-        }
-    
-        cells.forEach(cell => cell.textContent = '');
-        currentPlayer = 'X';
+        alert(data.winner === 'Draw' ? 'The game is a draw!' : `Player ${data.winner} wins!`);
         
+        cells.forEach(cell => cell.textContent = '');
+
+        Socket.emit('resetGame'); 
     }, 100);
-})
+});
+
+
+Socket.on('resetBoard', (data) => {
+    boardState = ['', '', '', '', '', '', '', '', ''];
+    currentPlayer = data.currentPlayer;
+    s.textContent = `New game! Current player: ${currentPlayer}`;
+});

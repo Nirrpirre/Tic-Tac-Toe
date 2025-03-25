@@ -10,7 +10,8 @@ const io = new Server(server);
 
 let players = [];
 let boardState = ['', '', '', '', '', '', '', '', ''];
-let currentPlayer = 'X';
+let currentPlayer = Math.random() < 0.5 ? "X" : "O";
+console.log(currentPlayer);
 
 app.use(express.static(__dirname));
 
@@ -42,41 +43,52 @@ app.get('/', (req, res) => {
 };
 
 io.on('connection', (Socket) => {
-    console.log('A user connected:', Socket.id);
+  console.log('A user connected:', Socket.id);
 
-    if(players.length < 2) {
-        players.push({ id: Socket.id, symbol: players.length === 0 ? 'X' : 'O'});
-        Socket.emit('assignSymbol', players[players.length - 1].symbol);
-      } else {
+  if(players.length < 2) {
+      players.push({ id: Socket.id, symbol: players.length === 0 ? 'X' : 'O'});
+      Socket.emit('assignSymbol', players[players.length - 1].symbol);
+  } else {
       Socket.emit('spectator');
-    }
+  }
 
-    io.emit('updatePlayers', {
+  io.emit('updatePlayers', {
       players: players.map(player => player.symbol),
       currentPlayer: currentPlayer
   });
-  
-    Socket.on('makeMove', (data) => {
-      if (Socket.id === players.find(player => player.symbol === currentPlayer).id && boardState[data.index] === '') {
-        boardState[data.index] = data.player;
-        io.emit('moveMade', data);
-        const winner = checkWinner();
-        if(winner) {
-          io.emit('gameOver', { winner });
-          boardState = ['', '', '', '', '', '', '', '', ''];
-          currentPlayer = 'X';
-        } else {
-          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        }
-      }
-    });
 
-    Socket.on('disconnect', () => {
+  Socket.on('makeMove', (data) => {
+      if (Socket.id === players.find(player => player.symbol === currentPlayer).id && boardState[data.index] === '') {
+          boardState[data.index] = data.player;
+          io.emit('moveMade', data);
+          const winner = checkWinner();
+          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+          if (winner) {
+              io.emit('gameOver', { winner });
+              boardState = ['', '', '', '', '', '', '', '', ''];
+              currentPlayer = Math.random() < 0.5 ? "X" : "O";
+              io.emit('updatePlayers', { players: players.map(player => player.symbol), currentPlayer });
+          }        
+      }
+  });
+
+  Socket.on('resetGame', () => {
+      boardState = ['', '', '', '', '', '', '', '', ''];
+      currentPlayer = Math.random() < 0.5 ? "X" : "O";
+
+      io.emit('resetBoard', { currentPlayer });
+      io.emit('updatePlayers', { players: players.map(player => player.symbol), currentPlayer });
+  });
+
+  Socket.on('disconnect', () => {
       console.log('User disconnected:', Socket.id);
       players = players.filter(player => player.id !== Socket.id);
-      io.emit('updatePlayers', players.map(player => player.symbol));
-    });
+      io.emit('updatePlayers', { players: players.map(player => player.symbol) });
+  });
 });
+
+
+
 
   server.listen(3000, () => {
     console.log('Server is running on http://localhost:3000');
