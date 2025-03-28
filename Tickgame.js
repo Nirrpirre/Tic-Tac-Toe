@@ -14,7 +14,7 @@ Socket.on('spectator', () => {
 });
 
 Socket.on('updatePlayers', (data) => {
-    s.textContent = `Players: ${data.players.join(' vs ')}. Current player: ${data.currentPlayer}`;
+    s.textContent = `Players: ${data.players.join(' vs ')}. Turn: ${data.currentPlayer}`;
     currentPlayer = data.currentPlayer;
 });
 
@@ -35,7 +35,7 @@ Socket.on('moveMade', (data) => {
 
     setTimeout(() => {
         currentPlayer=data.player === 'X' ? 'O' : 'X';
-        s.textContent = `Current player: ${currentPlayer}`;
+        s.textContent = `Turn: ${currentPlayer}`;
     }, 50);
 });
 
