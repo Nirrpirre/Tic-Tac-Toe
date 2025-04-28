@@ -1,8 +1,14 @@
 const Socket = io();
+const params = new URLSearchParams(window.location.search);
+const username = params.get('username');
 const board = document.getElementById('board');
 const cells = document.querySelectorAll('.cell');
 const s = document.getElementById('status');
 let mySymbol;
+let currentPlayer;
+let myUsername = username;
+
+Socket.emit('joinGame', { username: myUsername });
 
 Socket.on('assignSymbol', (symbol) => {
     mySymbol = symbol;
@@ -13,10 +19,24 @@ Socket.on('spectator', () => {
     s.textContent = 'You are a spectator.';
 });
 
+Socket.on('leaderboard', (leaderboard) => {
+    
+})
+
 Socket.on('updatePlayers', (data) => {
-    s.textContent = `Players: ${data.players.join(' vs ')}. Turn: ${data.currentPlayer}`;
+    const players = data.players;
+    const current = players.find(p => p.symbol === data.currentPlayer);
+    const [p1, p2] = players;
+
+    if (p1 && p2) {
+        s.textContent = `Players: ${p1.username} (X) vs ${p2.username} (O). Turn: ${current.username}`;
+    } else {
+        s.textContent = `Waiting for players...`;
+    }
+
     currentPlayer = data.currentPlayer;
 });
+
 
 
 cells.forEach(cell => {
