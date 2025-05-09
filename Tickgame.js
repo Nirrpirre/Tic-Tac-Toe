@@ -20,6 +20,20 @@ Socket.on('spectator', () => {
 });
 
 Socket.on('leaderboard', (leaderboard) => {
+    Socket.on('leaderboard', (leaderboard) => {
+        const leaderboardList = document.getElementById('leaderboard-list');
+        leaderboardList.innerHTML = '';
+    
+        leaderboard.sort((a, b) => b.wins - a.wins);
+    
+        leaderboard
+        .filter(player => player.wins > 0) 
+        .forEach(player => {
+            const li = document.createElement('li');
+            li.textContent = `${player.name}: ${player.wins} wins`;
+            leaderboardList.appendChild(li);
+        });
+    });
     
 })
 
@@ -61,7 +75,7 @@ Socket.on('moveMade', (data) => {
 
 Socket.on('gameOver', (data) => {
     setTimeout(() => {
-        alert(data.winner === 'Draw' ? 'The game is a draw!' : `Player ${data.winner} wins!`);
+        alert(data.winner === 'Draw' ? 'The game is a draw!' : `Player ${data} wins!`);
         
         cells.forEach(cell => cell.textContent = '');
 

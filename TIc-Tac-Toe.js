@@ -85,31 +85,41 @@ io.on('connection', (Socket) => {
       if (Socket.id === players.find(player => player.symbol === currentPlayer).id && boardState[data.index] === '') {
           boardState[data.index] = data.player;
           io.emit('moveMade', data);
-          const winner = checkWinner();
-          console.log(winner);
+          const winningSymbol = checkWinner();
+          console.log(winningSymbol);
           
-          if (winner) {
-              io.emit('gameOver', { winner });
-              let a;
-              players.forEach(p => {
-                if (p.symbol === winner) {
-                  a = p;
+          if (winningSymbol) {
+            io.emit('gameOver', winningSymbol);
+            let winningPlayer;
+            players.forEach(player => {
+              if (player.symbol === winningSymbol) {
+                winningPlayer = player;
+              }
+            });
+            winningPlayer.wins++;
+            leaderboard.forEach(leader => {
+              if (leader.name === winningPlayer.username) {
+                leader.wins++;
+              }
+            });
+            console.log(leaderboard);
+            players.forEach(player => {
+              let playerExistsInLeaderboard = false;
+              leaderboard.forEach(leader => {
+                if (leader.name === winningPlayer.username) {
+                  playerExistsInLeaderboard = true;
+                  console.log("Player exists? " + playerExistsInLeaderboard);
                 }
-              })
-              a.wins++;
-              let x = [];
-              leaderboard.forEach(player => {
-                x.push({ name: player.name, wins: player.wins });
               });
-              console.log(players)
-              players.forEach(player => {
-                x.push({ name: player.username, wins: player.wins })
-              })
-              let json = JSON.stringify(x);
-              fs.writeFile('leaderboard.json', json, 'utf-8', function (error) {
-                if (error) throw error;
-              });
-              io.emit('leaderboard', x);
+              if (!playerExistsInLeaderboard) {
+                leaderboard.push({ name: player.username, wins: player.wins });
+              }
+            });
+            console.log(leaderboard);
+            fs.writeFile('leaderboard.json', JSON.stringify(leaderboard), 'utf-8', function (error) {
+              if (error) throw error;
+            });
+            io.emit('leaderboard', leaderboard);
               boardState = ['', '', '', '', '', '', '', '', ''];
               currentPlayer = Math.random() < 0.5 ? "X" : "O";
               io.emit('updatePlayers', { players: players.map(player => player.symbol), currentPlayer });
