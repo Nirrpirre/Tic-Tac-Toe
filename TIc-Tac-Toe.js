@@ -9,14 +9,16 @@ const io = new Server(server);
 const fs = require('fs');
 
 let leaderboard;
+
+// Load leaderboard data from JSON file when the server starts
 fs.readFile('leaderboard.json', function (err, data) {
   if (err) throw err;
-  leaderboard = JSON.parse(data);
+  leaderboard = JSON.parse(data); // Convert JSON string to JavaScript object
 })
 
 let players = [];
 let boardState = ['', '', '', '', '', '', '', '', ''];  
-let currentPlayer = Math.random() < 0.5 ? "X" : "O";
+let currentPlayer = Math.random() < 0.5 ? "X" : "O"; // Randomly choose who starts
 console.log(currentPlayer);
 
 app.use(express.static(__dirname));
@@ -63,16 +65,18 @@ io.on('connection', (Socket) => {
       if (players.length < 2) {
           const symbol = players.length === 0 ? 'X' : 'O';
           let wins = 0;
+
+          // Check if player is in leaderboard and get their win count
           leaderboard.forEach(player => {
             if (player.name === username) {
               wins = player.wins
             }
           })
-          players.push({ id: Socket.id, symbol, username, wins });
-          Socket.emit('assignSymbol', symbol);
-          Socket.emit('leaderboard', leaderboard);
+          players.push({ id: Socket.id, symbol, username, wins }); // Add player to active game
+          Socket.emit('assignSymbol', symbol); // Tell player their symbol
+          Socket.emit('leaderboard', leaderboard); // Send them current leaderboard
       } else {
-          Socket.emit('spectator');
+          Socket.emit('spectator'); // If already two players, becomes a spectator
       }
 
       io.emit('updatePlayers', {
@@ -82,27 +86,31 @@ io.on('connection', (Socket) => {
   });
 
   Socket.on('makeMove', (data) => {
+      // Check if it's this player's turn and the chosen cell is empty
       if (Socket.id === players.find(player => player.symbol === currentPlayer).id && boardState[data.index] === '') {
-          boardState[data.index] = data.player;
-          io.emit('moveMade', data);
-          const winningSymbol = checkWinner();
+          boardState[data.index] = data.player; // Update board state
+          io.emit('moveMade', data); // Notify all about the move
+          const winningSymbol = checkWinner(); // Check if someone won
           console.log(winningSymbol);
           
           if (winningSymbol) {
             io.emit('gameOver', winningSymbol);
+            // Find the winning player
             let winningPlayer;
             players.forEach(player => {
               if (player.symbol === winningSymbol) {
                 winningPlayer = player;
               }
             });
-            winningPlayer.wins++;
+            winningPlayer.wins++; // Increase win count
+            // Update leaderboard with win
             leaderboard.forEach(leader => {
               if (leader.name === winningPlayer.username) {
                 leader.wins++;
               }
             });
             console.log(leaderboard);
+            // If winner is not already in leaderboard, add them
             players.forEach(player => {
               let playerExistsInLeaderboard = false;
               leaderboard.forEach(leader => {
@@ -116,6 +124,7 @@ io.on('connection', (Socket) => {
               }
             });
             console.log(leaderboard);
+            // Save updated leaderboard to file
             fs.writeFile('leaderboard.json', JSON.stringify(leaderboard), 'utf-8', function (error) {
               if (error) throw error;
             });
@@ -127,7 +136,7 @@ io.on('connection', (Socket) => {
           currentPlayer = currentPlayer === 'X' ? 'O' : 'X';     
       }
   });
-
+   // Reset game
   Socket.on('resetGame', () => {
       boardState = ['', '', '', '', '', '', '', '', ''];
       currentPlayer = Math.random() < 0.5 ? "X" : "O";
