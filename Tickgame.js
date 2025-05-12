@@ -14,7 +14,7 @@ Socket.on('assignSymbol', (symbol) => {
     mySymbol = symbol;
     s.textContent = `You are Player ${symbol}`;
 });
-
+// If the game already has two players, becomes a spectator
 Socket.on('spectator', () => {
     s.textContent = 'You are a spectator.';
 });
@@ -23,9 +23,9 @@ Socket.on('leaderboard', (leaderboard) => {
     Socket.on('leaderboard', (leaderboard) => {
         const leaderboardList = document.getElementById('leaderboard-list');
         leaderboardList.innerHTML = '';
-    
+        // Sort leaderboard by wins
         leaderboard.sort((a, b) => b.wins - a.wins);
-    
+        // Show only players who have at least 1 win
         leaderboard
         .filter(player => player.wins > 0) 
         .forEach(player => {
@@ -37,6 +37,7 @@ Socket.on('leaderboard', (leaderboard) => {
     
 })
 
+// Update player names, symbols, and current turn
 Socket.on('updatePlayers', (data) => {
     const players = data.players;
     const current = players.find(p => p.symbol === data.currentPlayer);
@@ -55,6 +56,7 @@ Socket.on('updatePlayers', (data) => {
 
 cells.forEach(cell => {
     cell.addEventListener('click', () => {
+        // Only allow clicking if the cell is empty and it's your turn
         if(cell.textContent === '' && mySymbol === currentPlayer) {
             Socket.emit('makeMove', {
                 index: cell.getAttribute('data-index'),
@@ -72,18 +74,18 @@ Socket.on('moveMade', (data) => {
         s.textContent = `Turn: ${currentPlayer}`;
     }, 50);
 });
-
+// Handels game over (win or draw)
 Socket.on('gameOver', (data) => {
     setTimeout(() => {
         alert(data.winner === 'Draw' ? 'The game is a draw!' : `Player ${data} wins!`);
-        
+        // Clear the board
         cells.forEach(cell => cell.textContent = '');
-
+        // Tell the server to reset the game
         Socket.emit('resetGame'); 
     }, 100);
 });
 
-
+// Reset the board when the server signals a new game
 Socket.on('resetBoard', (data) => {
     boardState = ['', '', '', '', '', '', '', '', ''];
     currentPlayer = data.currentPlayer;
