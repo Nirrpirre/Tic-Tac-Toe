@@ -85,56 +85,52 @@ io.on('connection', (Socket) => {
       });
   });
 
-  Socket.on('makeMove', (data) => {
-      // Check if it's this player's turn and the chosen cell is empty
-      if (Socket.id === players.find(player => player.symbol === currentPlayer).id && boardState[data.index] === '') {
-          boardState[data.index] = data.player; // Update board state
-          io.emit('moveMade', data); // Notify all about the move
-          const winningSymbol = checkWinner(); // Check if someone won
-          console.log(winningSymbol);
-          
-          if (winningSymbol) {
-            io.emit('gameOver', winningSymbol);
-            // Find the winning player
-            let winningPlayer;
-            players.forEach(player => {
-              if (player.symbol === winningSymbol) {
-                winningPlayer = player;
-              }
-            });
-            winningPlayer.wins++; // Increase win count
-            // Update leaderboard with win
-            leaderboard.forEach(leader => {
-              if (leader.name === winningPlayer.username) {
-                leader.wins++;
-              }
-            });
-            console.log(leaderboard);
-            // If winner is not already in leaderboard, add them
-            players.forEach(player => {
-              let playerExistsInLeaderboard = false;
-              leaderboard.forEach(leader => {
-                if (leader.name === winningPlayer.username) {
-                  playerExistsInLeaderboard = true;
-                  console.log("Player exists? " + playerExistsInLeaderboard);
-                }
-              });
-              if (!playerExistsInLeaderboard) {
-                leaderboard.push({ name: player.username, wins: player.wins });
-              }
-            });
-            console.log(leaderboard);
-            // Save updated leaderboard to file
+   Socket.on('makeMove', (data) => {
+    if (Socket.id === players.find(p => p.symbol === currentPlayer)?.id && boardState[data.index] === '') {
+      boardState[data.index] = data.player;
+      io.emit('moveMade', data);
+      const winningSymbol = checkWinner();
+      console.log("Winner:", winningSymbol);
+
+      if (winningSymbol) {
+        io.emit('gameOver', winningSymbol);
+
+        if (winningSymbol !== 'Draw') {
+          let winningPlayer = players.find(p => p.symbol === winningSymbol);
+
+          if (winningPlayer) {
+            winningPlayer.wins++;
+
+            let leader = leaderboard.find(l => l.name === winningPlayer.username);
+            if (leader) {
+              leader.wins++;
+            } else {
+              leaderboard.push({ name: winningPlayer.username, wins: winningPlayer.wins });
+            }
+
             fs.writeFile('leaderboard.json', JSON.stringify(leaderboard), 'utf-8', function (error) {
               if (error) throw error;
             });
+
             io.emit('leaderboard', leaderboard);
-              boardState = ['', '', '', '', '', '', '', '', ''];
-              currentPlayer = Math.random() < 0.5 ? "X" : "O";
-              io.emit('updatePlayers', { players: players.map(player => player.symbol), currentPlayer });
           }
-          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';     
+        }
+
+        // Reset board and start new game
+        boardState = ['', '', '', '', '', '', '', '', ''];
+        currentPlayer = Math.random() < 0.5 ? "X" : "O";
+        io.emit('updatePlayers', {
+          players: players.map(p => ({ username: p.username, symbol: p.symbol })),
+          currentPlayer
+        });
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        io.emit('updatePlayers', {
+          players: players.map(p => ({ username: p.username, symbol: p.symbol })),
+          currentPlayer
+        });
       }
+    }
   });
    // Reset game
   Socket.on('resetGame', () => {

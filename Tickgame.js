@@ -20,19 +20,17 @@ Socket.on('spectator', () => {
 });
 
 Socket.on('leaderboard', (leaderboard) => {
-    Socket.on('leaderboard', (leaderboard) => {
-        const leaderboardList = document.getElementById('leaderboard-list');
-        leaderboardList.innerHTML = '';
-        // Sort leaderboard by wins
-        leaderboard.sort((a, b) => b.wins - a.wins);
-        // Show only players who have at least 1 win
-        leaderboard
-        .filter(player => player.wins > 0) 
-        .forEach(player => {
-            const li = document.createElement('li');
-            li.textContent = `${player.name}: ${player.wins} wins`;
-            leaderboardList.appendChild(li);
-        });
+    const leaderboardList = document.getElementById('leaderboard-list');
+    leaderboardList.innerHTML = '';
+    // Sort leaderboard by wins
+    leaderboard.sort((a, b) => b.wins - a.wins);
+    // Show only players who have at least 1 win
+    leaderboard
+    .filter(player => player.wins > 0) 
+    .forEach(player => {
+        const li = document.createElement('li');
+        li.textContent = `${player.name}: ${player.wins} wins`;
+        leaderboardList.appendChild(li);
     });
     
 })
@@ -75,12 +73,10 @@ Socket.on('moveMade', (data) => {
     }, 50);
 });
 // Handels game over (win or draw)
-Socket.on('gameOver', (data) => {
+Socket.on('gameOver', (winner) => {
     setTimeout(() => {
-        alert(data.winner === 'Draw' ? 'The game is a draw!' : `Player ${data} wins!`);
-        // Clear the board
+        alert(winner === 'Draw' ? 'The game is a draw!' : `Player ${winner} wins!`);
         cells.forEach(cell => cell.textContent = '');
-        // Tell the server to reset the game
         Socket.emit('resetGame'); 
     }, 100);
 });
